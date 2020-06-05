@@ -7,7 +7,7 @@ copy selected filename path
 import os
 import gi
 
-gi.require_version("Gtk", "3.0")
+gi.require_versions({'Gdk': '3.0', 'Gtk': '3.0'})
 from gi.repository import Gtk, Gdk
 
 
