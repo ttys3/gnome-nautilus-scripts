@@ -13,11 +13,10 @@ from gi.repository import Gtk, Gdk
 
 def main():
     filenames = []
+
     for path in os.getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS', '').splitlines():
-        try:
-            filenames.append(os.path.dirname(path))
-        except OSError:
-            continue
+        filenames.append(os.path.dirname(path))
+
     clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
     clip.set_text("\n".join(filenames), -1)
 
