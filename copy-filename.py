@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Author: ttyS3
-copy selected filename
+copy selected file base name
 """
 
 import datetime
