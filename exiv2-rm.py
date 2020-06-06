@@ -20,9 +20,11 @@ import traceback
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
+from gi.repository import Gtk, Notify
 
 log_file = "/tmp/exiv2-rm.txt"
+
+app_name = os.path.basename(__file__)
 
 
 def main():
@@ -36,7 +38,7 @@ def main():
         for path in os.getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS', '').splitlines():
             total += strip_exif(path)
 
-        show_info("successfully processed file: {}".format(total))
+        send_notification(app_name, "successfully processed file: {}".format(total))
     except Exception:
         show_err(traceback.format_exc())
 
@@ -115,5 +117,12 @@ def show_err(msg):
     sys.exit()
 
 
+def send_notification(title, text, file_path_to_icon=""):
+    n = Notify.Notification.new(title, text, file_path_to_icon)
+    n.show()
+
+
 if __name__ == '__main__':
+    # One time initialization of libnotify
+    Notify.init(app_name)
     main()
