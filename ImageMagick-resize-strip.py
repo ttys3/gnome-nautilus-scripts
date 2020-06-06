@@ -26,6 +26,8 @@ from gi.repository import Gtk
 
 log_file = "/tmp/ImageMagick-strip.txt"
 
+resize_to = "1920x1080>"
+
 
 def main():
     try:
@@ -65,7 +67,7 @@ def exec_strip_cmd(path):
     try:
         # convert [input-option] input-file [output-option] output-file
         # resize only image is bigger
-        strip_meta = subprocess.run(["convert", path, "-resize", "1920x1080>", "-strip", path], stdout=f)
+        strip_meta = subprocess.run(["convert", path, "-resize", resize_to, "-strip", path], stdout=f)
         strip_meta.check_returncode()
         return 1
     except subprocess.CalledProcessError as err:
