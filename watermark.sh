@@ -22,6 +22,7 @@ do
       OUT_FILE=${SELECTED_FILE_PATHS[$i]}
       $HOME/.local/bin/ggwm -f "${SRC_FILE}" -txt "${WATERMARK_TEXT}" -t "${OUT_FILE}" >> /tmp/ggwm.log 2>&1
     fi
+    notify-send $(basename $0) "watermark done"
 done
 
 
