@@ -26,6 +26,7 @@ from gi.repository import Gtk, Notify
 
 log_file = "/tmp/ImageMagick-strip.txt"
 
+# use the `>` flag, resize only when the image is bigger
 resize_to = "1920x1080>"
 
 app_name = os.path.basename(__file__)
@@ -67,8 +68,14 @@ def exec_strip_cmd(path):
     f.write(path + "\n")
     try:
         # convert [input-option] input-file [output-option] output-file
-        # resize only image is bigger
-        strip_meta = subprocess.run(["convert", path, "-resize", resize_to, "-strip", path], stdout=f)
+        outpath = path
+        # when using -resize, resize a png to smaller resolution usually makes the size get bigger
+        # re-encode it to jpeg file will keep the size almost the same or slightly smaller
+        # see http://www.imagemagick.org/discourse-server/viewtopic.php?t=35439
+        # http://www.imagemagick.org/Usage/resize/
+        if "png" == imghdr.what(path):
+            outpath = path.rstrip(".png").rstrip(".PNG") + ".jpg"
+        strip_meta = subprocess.run(["convert", path, "-strip", "-resize", resize_to, outpath], stdout=f)
         strip_meta.check_returncode()
         return 1
     except subprocess.CalledProcessError as err:
