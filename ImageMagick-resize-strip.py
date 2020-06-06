@@ -73,10 +73,13 @@ def exec_strip_cmd(path):
         # re-encode it to jpeg file will keep the size almost the same or slightly smaller
         # see http://www.imagemagick.org/discourse-server/viewtopic.php?t=35439
         # http://www.imagemagick.org/Usage/resize/
-        if "png" == imghdr.what(path):
+        is_png = "png" == imghdr.what(path)
+        if is_png:
             outpath = path.rstrip(".png").rstrip(".PNG") + ".jpg"
         strip_meta = subprocess.run(["convert", path, "-strip", "-resize", resize_to, outpath], stdout=f)
         strip_meta.check_returncode()
+        if is_png:
+            os.remove(path)
         return 1
     except subprocess.CalledProcessError as err:
         show_err(err)
