@@ -15,6 +15,7 @@ import os
 import subprocess
 import sys
 import imghdr
+import traceback
 
 import gi
 
@@ -27,11 +28,17 @@ log_file = "/tmp/exiv2-rm.txt"
 def main():
     try:
         os.remove(log_file)
-    except NotImplementedError:
+    except FileNotFoundError:
         pass
 
-    for path in os.getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS', '').splitlines():
-        strip_exif(path)
+    try:
+        total = 0
+        for path in os.getenv('NAUTILUS_SCRIPT_SELECTED_FILE_PATHS', '').splitlines():
+            total += strip_exif(path)
+
+        show_info("successfully processed file: {}".format(total))
+    except Exception:
+        show_err(traceback.format_exc())
 
 
 def is_image(path):
@@ -40,14 +47,17 @@ def is_image(path):
     allowed_filetypes = ('.png', '.jpg', '.jpeg', '.webp', '.tiff', '.bmp', '.gif')
     if not path.lower().endswith(allowed_filetypes):
         return False
-    if not ('.' + imghdr.what(path)) in allowed_filetypes:
+    ft = imghdr.what(path)
+    if ft is None:
+        return False
+    if not ('.' + ft) in allowed_filetypes:
         return False
     return True
 
 
 def exec_strip_cmd(path):
     if not is_image(path):
-        return
+        return 0
 
     f = open(log_file, "a")
     f.write(path + "\n")
@@ -55,11 +65,12 @@ def exec_strip_cmd(path):
         # -d a: all supported metadata (the default)
         strip_meta = subprocess.run(["exiv2", "-da", "rm", path], stdout=f)
         strip_meta.check_returncode()
-        f.close()
+        return 1
     except subprocess.CalledProcessError as err:
         show_err(err)
-        f.close()
         raise err
+    finally:
+        if f: f.close()
 
 
 def strip_exif(path):
@@ -76,15 +87,26 @@ def strip_exif(path):
         if is_dir:
             total += strip_exif(entry.path)
         else:
-            exec_strip_cmd(entry.path)
-            total += 1
+            total += exec_strip_cmd(entry.path)
     return total
+
+
+def show_info(msg):
+    md = Gtk.MessageDialog(parent=None,
+                           flags=0,
+                           message_type=Gtk.MessageType.INFO,
+                           buttons=Gtk.ButtonsType.CLOSE,
+                           text=msg
+                           )
+    md.run()
+    md.destroy()
+    sys.exit()
 
 
 def show_err(msg):
     md = Gtk.MessageDialog(parent=None,
                            flags=0,
-                           message_type=Gtk.MessageType.INFO,
+                           message_type=Gtk.MessageType.ERROR,
                            buttons=Gtk.ButtonsType.CLOSE,
                            text=msg
                            )
