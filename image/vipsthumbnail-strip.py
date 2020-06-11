@@ -24,12 +24,13 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Notify
 
-log_file = "/tmp/ImageMagick-strip.txt"
+log_file = "/tmp/vipsthumbnail-strip.txt"
 
 # use the `>` flag, resize only when the image is bigger
-resize_to = "1920x1080>"
+resize_to = "1920x1080"
 
 app_name = os.path.basename(__file__)
+
 
 def main():
     try:
@@ -71,15 +72,11 @@ def exec_strip_cmd(path):
         outpath = path
         # when using -resize, resize a png to smaller resolution usually makes the size get bigger
         # re-encode it to jpeg file will keep the size almost the same or slightly smaller
-        # see http://www.imagemagick.org/discourse-server/viewtopic.php?t=35439
-        # http://www.imagemagick.org/Usage/resize/
-        is_png = "png" == imghdr.what(path)
-        if is_png:
-            outpath = path.rstrip(".png").rstrip(".PNG") + ".jpg"
-        strip_meta = subprocess.run(["convert", path, "-strip", "-resize", resize_to, outpath], stdout=f)
+        # vips will write while reading, so we can not use the same name to output
+        # vipsthumbnail IMG_9525.JPG -d -s 1920x1080 -o b.jpg'[optimize_coding,strip]'
+        strip_meta = subprocess.run(
+            ["vipsthumbnail", path, "-d", "-s", resize_to, "-o", os.path.dirname(path) + '/%s_tn.jpg[optimize_coding,strip]'], stdout=f)
         strip_meta.check_returncode()
-        if is_png:
-            os.remove(path)
         return 1
     except subprocess.CalledProcessError as err:
         show_err(err)
@@ -133,6 +130,7 @@ def show_err(msg):
 def send_notification(title, text, file_path_to_icon=""):
     n = Notify.Notification.new(title, text, file_path_to_icon)
     n.show()
+
 
 if __name__ == '__main__':
     # One time initialization of libnotify
